@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="Changshun Wang"><title>hexo原理浅析 | 有 间</title><meta name="description" content="写在前面 * 
+昨天早上找前辈给阿里投的简历，没有想到晚上竟然就收到了电话面试。。。从早上到晚上。。。才十个小时。。。给阿里的效率跪了。。。我真是一点准备都没有，全程懵逼，感觉自己表现非常差。。。今天回过头来仔细想了想昨天的问题，觉得其实问的确实很基础。大部分都是自己曾经做东西时遇到过的问题。没有流"><meta name="keywords"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo.jpg" style="width:85%;"><h3 title=""><a href="/">有 间</a></h3><div class="description"><p>王常顺's Blog</p></div></div></div><ul class="social-links"><li><a href="https://github.com/changshunwang"><i class="fa fa-github-square"></i></a></li><li><a href="http://stackoverflow.com/users/6792247/maxshun"><i class="fa fa-stack-overflow"></i></a></li><li><a href="/atom.xml"><i class="fa fa-rss"></i></a></li></ul><div class="footer"><div class="by_farbox"><Copyright>&copy; &nbsp;2017&nbsp; changshun</Copyright></div><span>Theme by </span><a href="https://github.com/Ben02/hexo-theme-Anatole"> Anatole</a></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/archives">文章</a></li><li><a href="/about">关于</a></li></div><div class="information"><div class="back_btn"><li><a onclick="window.history.go(-1)" class="fa fa-chevron-left"> </a></li></div><div class="avatar"><img src="/images/avatar.jpg"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>hexo原理浅析</a></h3></div><div class="post-content"><ul>
+<li>写在前面 * <blockquote>
+<p>昨天早上找前辈给阿里投的简历，没有想到晚上竟然就收到了电话面试。。。从早上到晚上。。。才十个小时。。。给阿里的效率跪了。。。我真是一点准备都没有，全程懵逼，感觉自己表现非常差。。。<br>今天回过头来仔细想了想昨天的问题，觉得其实问的确实很基础。大部分都是自己曾经做东西时遇到过的问题。没有流畅答出一方面是因为紧张，一方面也是对技术还缺乏深入的理解。<br>昨天面试官看我有个人网站，让我简单说说hexo的原理和机制。我觉得hexo就是对markdown文件的重新渲染和编排。今天想想，觉得他想问的不只那么多。<br>于是决定尝试分析下从创建页面到部署的整个流程。要学习的东西还有很多！</p>
+</blockquote>
+</li>
+</ul>
+<p>我之所以回答hexo是对markdown文件的重新渲染和编排。我想也不能算错，这是官方上对hexo的介绍：</p>
+<blockquote>
+<p>Hexo 是一个快速、简洁且高效的博客框架。Hexo 使用 Markdown（或其他渲染引擎）解析文章，在几秒内，即可利用靓丽的主题生成静态网页。 </p>
+</blockquote>
+<p>但是，却觉得不满意，究其原因，我的着眼点很小，仅停留在博客内容本身，这和我最近一直在搞页面的美观有一定关系。但是如果放眼整个博客环境，值得研究学习的内容有很多。本文将从以下几个方面尝试分析。</p>
+<ul>
+<li>内容<ul>
+<li>hexo的文件夹结构</li>
+<li>使用markdown编写的博客文章</li>
+<li>使用yaml编写的配置文件 </li>
+</ul>
+</li>
+<li>表现<ul>
+<li>hexo的模板引擎</li>
+<li>独立于hexo主题的个性化主页</li>
+<li>细节之处的调整</li>
+</ul>
+</li>
+<li>发布<ul>
+<li>Git版本控制系统</li>
+<li>GitHub Pages</li>
+<li>部署到自己的域名</li>
+</ul>
+</li>
+</ul>
+<h1 id="内容"><a href="#内容" class="headerlink" title="内容"></a>内容</h1><p>内容是一个博客的灵魂。</p>
+<h2 id="hexo的文件夹结构"><a href="#hexo的文件夹结构" class="headerlink" title="hexo的文件夹结构"></a>hexo的文件夹结构</h2><p>.<br>├── _config.yml<br>├── db.json<br>├── node_modules<br>├── package.json<br>├── public<br>├── scaffolds<br>├── source #所有文章文件放在这里<br>└── themes #主题文件夹</p>
+<p><strong>_config.yml</strong>&nbsp; 站点的配置文件。<br><strong>db.json</strong> &nbsp; 缓存文件<br><strong>node_modules</strong> &nbsp; 安装的插件以及hexo所需的一些node.js模块。<br><strong>package.json</strong>&nbsp; 应用程序信息，配置hexo运行需要的js包。<br><strong>public</strong>&nbsp; 最终所见网页的所有内容<br><strong>scaffolds</strong> &nbsp; 模板文件夹。当新建一个文章时，会默认包含对应模板的内容。<br><strong>source</strong>&nbsp; 资源文件夹是存放用户资源的地方。所有的源文件都会被保存在_post文件夹中。除 <em>posts 文件夹之外，开头命名为 </em> (下划线)的文件 / 文件夹和隐藏的文件将会被忽略。Markdown 和 HTML 文件会被解析并放到 public 文件夹，而其他文件会被拷贝过去。<br><strong>themes</strong>&nbsp; 存放主题文件，hexo会根据主题来生成静态页面。</p>
+<h2 id="使用markdown编写的博客文章"><a href="#使用markdown编写的博客文章" class="headerlink" title="使用markdown编写的博客文章"></a>使用markdown编写的博客文章</h2><p>之所以选择hexo做博客一个原因就是它支持markdown。用markdown写文章感觉特别爽，只需要记住简单的几个语法，而且可以把全部的注意力放在文字本身上，而不用去过多的关注排版。</p>
+<h2 id="使用yaml编写的配置文件"><a href="#使用yaml编写的配置文件" class="headerlink" title="使用yaml编写的配置文件"></a>使用yaml编写的配置文件</h2><p>yaml是专门用来写配置文件的语言。它用首行缩进表示层级关系，便于读写理解。</p>
+<p>配置文件一般用来对所需环境进行设置。hexo中涉及到两个配置文件，一个是位于主目录下的，另一个是位于主题目录下的。</p>
+<p>通常主目录下的配置文件用于对全站的配置，比如站点的基本信息，文章的布局，写作的格式，部署到github上的参数等等。</p>
+<p>而主题目录下的配置文件用于对该主题的配置，比如站点导航栏的设置，一些插件的设置等。</p>
+<h1 id="表现"><a href="#表现" class="headerlink" title="表现"></a>表现</h1><p>表现是一个博客的个性。</p>
+<h2 id="hexo的模板引擎"><a href="#hexo的模板引擎" class="headerlink" title="hexo的模板引擎"></a>hexo的模板引擎</h2><p>模板引擎的作用，就是将界面与数据分离。最简单的原理是将模板内容中指定的地方替换成数据，实现业务代码与逻辑代码分离。</p>
+<p>hexo默认的是使用ejs，同类型的东西还有很多，比如jade，swig。我选用主题是用jade的。<br>hexo首先会解析md文件，然后根据layout判断布局类型，再调用其他的文件，这样每一块的内容都是独立的，提高代码的复用性。最终会生成一个html页面。</p>
+<p>jade采用缩进语法格式，和python比较类似，看上去也很舒服，我比较喜欢这种风格。在hexo中使用jade需要安装相应的模块，否则无法使用。</p>
+<h2 id="独立于hexo主题的个性化主页"><a href="#独立于hexo主题的个性化主页" class="headerlink" title="独立于hexo主题的个性化主页"></a>独立于hexo主题的个性化主页</h2><p>如果对博客使用一个主题会觉得很单调，可以自己写一改完独立于主题样式的主页。这里，就要弄明白hexo每次部署的流程。</p>
+<ol>
+<li>每次执行hexo g命令时，hexo都会遍历主题文件中的source目录，这里的source主要包括css，fonts，js等文件，建立索引。</li>
+<li>根据索引会把主题文件生成到public文件中，此时public文件是一个由html，js，css等内容制作的博客，也就是网页的根目录。</li>
+<li>通过部署，hexo d 将 public 文件夹的内容以 git 方式 push 到 github 的指定项目的指定分支，由 github 进行显示。当然，也可以部署到自己的域名上。</li>
+</ol>
+<p>在node_modules中有一系列的文件用于对hexo中的各类页面进行默认的渲染，如果要启动个性化主页，需要删除hexo-generator-index,同时，将主题目录下的source目录作为你个性化页面的根目录。</p>
+<h2 id="细节之处的调整"><a href="#细节之处的调整" class="headerlink" title="细节之处的调整"></a>细节之处的调整</h2><p>根据二八原则，细节之处的调整是那百分之八十，我花了很长时间来调整布局，颜色，整体效果。有一个功能，要还是不要，放在什么位置，都要想好久。</p>
+<p>导航栏我就做过三个版本的，一种是汉堡按钮折叠式，一种是宽度自适应屏幕固定的，但最终还是选择这个样子。而且去掉了hexo有的分类和标签云。只留下主页，文章，和关于三个内容。</p>
+<p>文字的布局也很头疼，主页上那句庄子的话，我至今看的很别扭，应该把它做成竖版，效果可能会更好。</p>
+<p>还有一件事要注意，面试的时候被问到解释css盒模型。我觉得对盒模型用的挺熟，抽象的定义了网页内元素的布局及排版，支支吾吾又说了内边距，外边距，边框。回头查了定义，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">CSS css盒子模型 又称框模型 (Box Model) ，包含了元素内容（content）、内边距（padding）、边框（border）、外边距（margin）几个要素。</div></pre></td></tr></table></figure>
+<p>这竟然是定义。。。我只觉得自己学东西太浮躁，学了就想拿来用，忽略了对基本概念的准确记忆和认识。</p>
+<h1 id="发布"><a href="#发布" class="headerlink" title="发布"></a>发布</h1><p>发布让博客拥有生命。</p>
+<h2 id="Git版本控制系统"><a href="#Git版本控制系统" class="headerlink" title="Git版本控制系统"></a>Git版本控制系统</h2><p>这是我第一次正视git。当面试官问我项目都部署在哪里的时候，我脱口而出github。他再问我是如何部署的时候，我说我是用客户端。。。他又问我你不用git吗，我就没法接了。。。之前确实有看到过git这个版本控制系统，电脑上也装了，但毕竟自己在做东西，放在本地也没事，github还有客户端这种为我这样懒人设计的，所以基本用不到。</p>
+<p>但是想到在一个企业里，很多人同时工作一个项目，其变化和意外情况不可预料，如果没有一个有效的版本控制工具，肯定会为企业带来很大的损失。</p>
+<p>以后要锻炼使用git部署。</p>
+<h2 id="GitHub-Pages"><a href="#GitHub-Pages" class="headerlink" title="GitHub Pages"></a>GitHub Pages</h2><p>这部分网上有很多傻瓜教程，我也是跟着一步一步做的，没有遇到什么问题。</p>
+<p>但如果细问，究竟原理是什么，机制是什么。我确实不知道，和远程部署一样，这部分内容是我应该重点学的。</p>
+<h2 id="部署到自己的域名"><a href="#部署到自己的域名" class="headerlink" title="部署到自己的域名"></a>部署到自己的域名</h2><p>首先购买域名，服务器，或者虚拟主机。我是在主机公园上买的虚拟主机，加上域名，一年200+，不是很贵。域名和服务器都有了，需要解析，这在网上都有教程。</p>
+<p>之后是部署，开始试着在主机公园上直接添加了WordPress，主要是为了分析网站的文件夹结构。搞清楚之后。 因为以前用过filezilla给远程主机传过文件，我认为原理上是一样的。</p>
+<p>因为部署在github上展示的页面都在public文件夹中，所以只需要把文件传到虚拟主机的public中就可以了。但是我发现一个问题，这样太傻了。为什么没有自动化部署的工具，于是想起之前看过的技术贴，突然明白一些工具的用处。</p>
+<ul>
+<li>总结 *</li>
+</ul>
+<p>当我着眼仅仅着眼于怎么样让页面好看的时候，我根本没有关心过更大层面上的问题。部署，后台数据优化这些都是应该深挖的东西，我却草草略过。还有一个问题，逐帧渲染页面有没有什么更好的，当下更流行的方法，我也没有关注过。还是需要多看社区博客，把问题多看一眼，理解透一点，实践的同时也不能忽略基础概念的记忆与准确表述。</p>
+<p>关于面试吧，要调整好心态。我记得孔子说过：“不患无位，患所以立。”机会总是有的，看自己能不能把握的住了。</p>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-file-o"></i><span class="date">2017-03-21</span><i class="fa fa-tag"></i><a href="/categories/艺趣/" title="艺趣" class="tag">艺趣 </a><a href="/tags/hexo/" title="-hexo" class="tag">-hexo </a></div></div></div></div><div class="pagination"><ul class="clearfix"></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
